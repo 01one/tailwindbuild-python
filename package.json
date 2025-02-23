@@ -1,0 +1,17 @@
+{
+    "scripts": {
+        "build": "tailwindcss -i ./src/input.css -o $TEMP_BUILD_DIR/$CSS_FILENAME --minify",
+        "dev": "tailwindcss -i ./src/input.css -o $TEMP_BUILD_DIR/$CSS_FILENAME --watch"
+    },
+    "devDependencies": {
+        "autoprefixer": "^10.4.20",
+        "postcss": "^8.5.2",
+        "tailwindcss": "^3.4.17"
+    },
+    "name": "tailwindcss-design",
+    "version": "1.0.0",
+    "main": "postcss.config.js",
+    "author": "",
+    "license": "ISC",
+    "description": ""
+}

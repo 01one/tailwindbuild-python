@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tailwind CSS Builder</title>
+    <link rel="stylesheet" href="/static/styles.css">
+
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen py-6 flex flex-col justify-center sm:py-12">
+        <div class="relative py-3 sm:max-w-xl sm:mx-auto">
+            <div class="relative px-4 py-10 bg-white mx-8 md:mx-0 shadow rounded-3xl sm:p-10">
+                <div class="max-w-md mx-auto">
+                    <div class="divide-y divide-gray-200">
+                        <div class="py-8 text-base leading-6 space-y-4 text-gray-700 sm:text-lg sm:leading-7">
+                            <h1 class="text-2xl font-bold text-gray-900 mb-8">Tailwind CSS Builder</h1>
+                            <form id="uploadForm" class="space-y-4">
+                                <div class="flex flex-col">
+                                    <label for="htmlFile" class="text-sm font-medium text-gray-700">Upload HTML File</label>
+                                    <input type="file" id="htmlFile" accept=".html,.htm" required
+                                        class="mt-1 block w-full text-sm text-gray-500
+                                        file:mr-4 file:py-2 file:px-4
+                                        file:rounded-full file:border-0
+                                        file:text-sm file:font-semibold
+                                        file:bg-blue-50 file:text-blue-700
+                                        hover:file:bg-blue-100">
+                                </div>
+                                <button type="submit" 
+                                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    Build Tailwind CSS
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div id="loader" class="hidden py-4">
+                            <div class="w-full flex justify-center">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            </div>
+                        </div>
+
+                        <div id="result" class="hidden py-4">
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-medium text-gray-900">Generated CSS</h3>
+                                <div class="relative">
+                                    <pre id="cssOutput" class="bg-gray-50 rounded-lg p-4 overflow-x-auto text-sm"></pre>
+                                    <div class="absolute top-2 right-2 flex gap-2">
+                                        <button id="copyButton" 
+                                            class="px-3 py-1 bg-gray-200 rounded-md text-sm hover:bg-gray-300">
+                                            Copy
+                                        </button>
+                                        <button id="downloadButton" 
+                                            class="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700">
+                                            Download
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('htmlFile');
+            const loader = document.getElementById('loader');
+            const result = document.getElementById('result');
+            
+            if (!fileInput.files[0]) {
+                alert('Please select a file');
+                return;
+            }
+            
+            formData.append('htmlFile', fileInput.files[0]);
+            
+            try {
+                loader.classList.remove('hidden');
+                result.classList.add('hidden');
+                
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to generate CSS');
+                }
+
+
+                const cssContent = await response.text();
+                
+
+                const cssOutput = document.getElementById('cssOutput');
+                cssOutput.textContent = cssContent;
+                result.classList.remove('hidden');
+                
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                loader.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('copyButton').addEventListener('click', async () => {
+            const cssOutput = document.getElementById('cssOutput');
+            try {
+                await navigator.clipboard.writeText(cssOutput.textContent);
+                const button = document.getElementById('copyButton');
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            } catch (err) {
+                alert('Failed to copy text');
+            }
+        });
+
+        document.getElementById('downloadButton').addEventListener('click', () => {
+            const cssContent = document.getElementById('cssOutput').textContent;
+            const blob = new Blob([cssContent], { type: 'text/css' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'styles.css';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        });
+    </script>
+</body>
+</html>
